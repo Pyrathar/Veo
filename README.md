@@ -8,6 +8,11 @@ How to run this:
 cd backend
 ```
 
+The classic install packages
+```bash
+npm i
+```
+
 To get an instance of postgres up and running:
 ```bash
 docker-compose up postgres
@@ -39,6 +44,11 @@ npm run test
 cd frontend
 ```
 
+Surprise! install packages!
+```bash
+npm i
+```
+Actually starting:
 ```bash
 npm run start
 ```
