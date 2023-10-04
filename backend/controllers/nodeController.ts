@@ -6,30 +6,32 @@ interface NodeData {
   id?: number;
   name: string;
   parentId?: number;
-  height: number;
+  height?: number;
   programmingLanguage? : string;
   department? : string;
 }
 
-export const createNode = async (data: NodeData) => {
-  return prisma.node.create({
-    data,
-  });
-};
 
 export const upsertNode = async (data: NodeData) => {
-  const { id, name, height, parentId, programmingLanguage, department } = data;
+  const { id, name, parentId, programmingLanguage, department } = data;
+
+  let newHeight = 0;
+  if (parentId != null) {
+    const parent = await prisma.node.findUnique({ where: { id: parentId } });
+    if (!parent) throw new Error("Parent node not found");
+    newHeight = parent.height + 1;
+  }
 
   const node = await prisma.node.upsert({
     where: { id: id ?? 0 },
     create: {
       name,
-      height,
+      height: newHeight,
       parent: parentId ? { connect: { id: parentId } } : undefined,
     },
     update: {
       name,
-      height,
+      height: newHeight,
       parent: parentId ? { connect: { id: parentId } } : undefined,
     },
   });
@@ -60,8 +62,25 @@ export const upsertNode = async (data: NodeData) => {
     });
   }
 
+  const updateDescendantHeights = async (parentId: number, height: number) => {
+    const children = await prisma.node.findMany({
+      where: { parentId },
+    });
+
+    for (const child of children) {
+      await prisma.node.update({
+        where: { id: child.id },
+        data: { height: height + 1 },
+      });
+      await updateDescendantHeights(child.id, height + 1);
+    }
+  };
+
+  await updateDescendantHeights(node.id, newHeight);
+
   return node;
 };
+
 
 
 export const getNodeById = async (id: number) => {
