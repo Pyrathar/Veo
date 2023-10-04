@@ -23,6 +23,21 @@ router.get("/", async (_: Request, res: Response) => {
   }
 });
 
-// ... other routes related to orgs
+
+router.get("/:id", async (req: Request, res: Response) => {
+  try {
+    const nodeId = parseInt(req.params.id, 10);
+    if (isNaN(nodeId)) {
+      return res.status(400).json({ error: "Invalid ID format" });
+    }
+    const node = await nodeController.getNodeById(nodeId);
+    if (!node) {
+      return res.status(404).json({ error: "Node not found" });
+    }
+    res.status(200).json(node);
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+});
 
 export default router;
