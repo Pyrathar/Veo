@@ -8,8 +8,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Organization {
-  id    Int      @id @default(autoincrement())
-  name  String
-  email String   @unique
+model Node {
+  id        Int        @id @default(autoincrement())
+  name      String
+  parentId  Int?       // Self-relation to allow hierarchy
+  height    Int
+  parent    Node?      @relation("NodeToNode", fields: [parentId], references: [id])
+  children  Node[]     @relation("NodeToNode")
+  manager   Manager?
+  developer Developer?
+}
+
+model Manager {
+  nodeId        Int  @id
+  department    String
+  node          Node @relation(fields: [nodeId], references: [id])
+}
+
+model Developer {
+  nodeId             Int  @id
+  programmingLanguage String
+  node               Node @relation(fields: [nodeId], references: [id])
 }

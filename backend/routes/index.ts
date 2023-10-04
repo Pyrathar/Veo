@@ -1,6 +1,6 @@
 import express from "express";
-import organizationRoutes from "./organizationRoutes";
+import nodeRoutes from "./nodeRoutes";
 const router = express.Router();
 
-router.use("/organizations", organizationRoutes);
+router.use("/node", nodeRoutes);
 export default router;
