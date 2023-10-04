@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import RenderNode from './RenderNode';
 
+interface NodeViewerProps {
+  reloadNodes: boolean;
+}
+
 interface Node {
   id: number;
   name: string;
@@ -9,27 +13,23 @@ interface Node {
   children?: Node[];
 }
 
-const NodeViewer: React.FC = () => {
+const NodeViewer: React.FC<NodeViewerProps> = ({ reloadNodes }) => {
   const [nodes, setNodes] = useState<Node[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('http://localhost:8000/node/') 
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok ' + response.statusText);
-        }
-        return response.json();
-      })
-      .then(data => {
+    const fetchNodes = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/node/');
+        const data = await response.json();
         setNodes(data);
-      })
-      .catch(error => {
-        console.error('Error fetching data: ', error);
-        setError(error.toString());
-      });
-  }, []);
-
+      } catch (error) {
+        console.error('Error fetching nodes:', error);
+      }
+    };
+    
+    fetchNodes();
+  }, [reloadNodes])
   if (error) {
     return <p>Error loading nodes: {error}</p>;
   }
