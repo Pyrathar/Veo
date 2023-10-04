@@ -1,5 +1,4 @@
 import { 
-  createNode, 
   getNodeById, 
   getNodes, 
   getChildrenOfNode,
@@ -21,29 +20,12 @@ describe("NodeController", () => {
       height: 0,
     };
 
-    const rootNode = await createNode(rootNodeData);
+    const rootNode = await upsertNode(rootNodeData);
     rootNodeId = rootNode.id;
   });
 
   afterAll(async () => {
     await clearAllData();
-  });
-
-  describe("createNode", () => {
-    it("should create a node", async () => {
-      const nodeData = {
-        name: "Child Node 1",
-        parent: {
-          connect: { id: rootNodeId },
-        },
-        height: 1,
-      };
-
-      const node = await createNode(nodeData);
-      expect(node).toHaveProperty("id");
-      expect(node.name).toBe(nodeData.name);
-      expect(node.parentId).toBe(rootNodeId);
-    });
   });
 
   describe("getNodeById", () => {
@@ -66,18 +48,22 @@ describe("NodeController", () => {
   describe("getChildrenOfNode", () => {
     it("should return child nodes of a given node", async () => {
       const childNodeData = {
-        name: "Child Node 2",
-        parent: {
-          connect: { id: rootNodeId },
-        },
-        height: 1,
+        name: "Child Node 1",
+        parentId: rootNodeId
       };
 
-      await createNode(childNodeData);
+      const childNode2Data = {
+        name: "Child Node 2",
+        parentId: rootNodeId
+      };
+
+      await upsertNode(childNodeData);
+      await upsertNode(childNode2Data);
+
       
       const childNodes = await getChildrenOfNode(rootNodeId);
       expect(Array.isArray(childNodes)).toBeTruthy();
-      expect(childNodes.length).toBeGreaterThan(0);
+      expect(childNodes.length).toBe(2);
     });
   });
 
@@ -113,7 +99,6 @@ describe("NodeController", () => {
     it('should update the node and related developer and manager', async () => {
       const nodeData = {
         name: 'Root',
-        height: 0,
         programmingLanguage: 'Python',
         department: 'Engineering',
       };
@@ -123,7 +108,6 @@ describe("NodeController", () => {
       const updatedData = {
         id: newNode.id,
         name: 'Updated Root',
-        height: 1,
         programmingLanguage: 'JavaScript',
         department: 'HR',
       };
@@ -133,7 +117,6 @@ describe("NodeController", () => {
       // Validate Updated Node
       expect(updatedNode.id).toEqual(newNode.id);
       expect(updatedNode.name).toEqual(updatedData.name);
-      expect(updatedNode.height).toEqual(updatedData.height);
 
       // Validate Updated Developer Entry
       const developer = await prisma.developer.findUnique({
@@ -148,6 +131,54 @@ describe("NodeController", () => {
       });
       expect(manager).not.toBeNull();
       expect(manager?.department).toEqual(updatedData.department);
+    });
+
+    it("should create a root node when parentId is not provided", async () => {
+      const nodeData = {
+        name: "Root Node",
+      };
+  
+      const newNode = await upsertNode(nodeData);
+  
+      expect(newNode).toHaveProperty("id");
+      expect(newNode.name).toBe(nodeData.name);
+      expect(newNode.height).toBe(0);
+    });
+  
+    it("should create a child node with height incremented by 1 compared to parent", async () => {
+      const parentNode = await upsertNode({ name: "Parent Node" });
+  
+      const childNodeData = {
+        name: "Child Node",
+        parentId: parentNode.id,
+      };
+  
+      const childNode = await upsertNode(childNodeData);
+  
+      expect(childNode).toHaveProperty("id");
+      expect(childNode.name).toBe(childNodeData.name);
+      expect(childNode.height).toBe(parentNode.height + 1);
+    });
+  
+    it("should adjust the height of nodes when moving to a new parent", async () => {
+      const initialParent = await upsertNode({ name: "Initial Parent" });
+      const newParent = await upsertNode({ name: "New Parent" });
+  
+      const nodeToMove = await upsertNode({
+        name: "Moving Node",
+        parentId: initialParent.id,
+      });
+  
+      // Move to new parent
+      const movedNode = await upsertNode({
+        id: nodeToMove.id,
+        name: nodeToMove.name,
+        parentId: newParent.id,
+      });
+  
+      expect(movedNode).toHaveProperty("id");
+      expect(movedNode.parentId).toBe(newParent.id);
+      expect(movedNode.height).toBe(newParent.height + 1);
     });
   });
 });
