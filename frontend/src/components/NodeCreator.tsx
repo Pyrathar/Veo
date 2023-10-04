@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 interface FormData {
   name: string;
 }
 
 interface NodeCreatorProps {
-    onNodeCreate: () => void;
+  onNodeCreate: () => void;
 }
 
 const NodeCreator: React.FC<NodeCreatorProps> = ({ onNodeCreate }) => {
   const [isFormVisible, setIsFormVisible] = useState<boolean>(false);
-  const [formData, setFormData] = useState<FormData>({ name: '' });
+  const [formData, setFormData] = useState<FormData>({ name: "" });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error] = useState<string | null>(null);
 
@@ -24,24 +24,24 @@ const NodeCreator: React.FC<NodeCreatorProps> = ({ onNodeCreate }) => {
     event.preventDefault();
     setIsLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/node/', {
-        method: 'PUT',
+      const response = await fetch("http://localhost:8000/node/", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create node');
+        throw new Error("Failed to create node");
       }
 
       // Handle success (maybe update state, or navigate user etc.)
       setIsFormVisible(false);
-      setFormData({ name: '' });
+      setFormData({ name: "" });
       onNodeCreate();
     } catch (error) {
-     // setError(error);
+      // setError(error);
     } finally {
       setIsLoading(false);
     }
@@ -50,7 +50,7 @@ const NodeCreator: React.FC<NodeCreatorProps> = ({ onNodeCreate }) => {
   return (
     <div>
       <button onClick={toggleFormVisibility}>
-        {isFormVisible ? 'Cancel' : 'Create Node'}
+        {isFormVisible ? "Cancel" : "Create Node"}
       </button>
 
       {isFormVisible && (

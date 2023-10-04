@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import RenderNode from './RenderNode';
+import React, { useEffect, useState } from "react";
+import RenderNode from "./RenderNode";
 
 interface NodeViewerProps {
   reloadNodes: boolean;
@@ -20,27 +20,27 @@ const NodeViewer: React.FC<NodeViewerProps> = ({ reloadNodes }) => {
   useEffect(() => {
     const fetchNodes = async () => {
       try {
-        const response = await fetch('http://localhost:8000/node/');
+        const response = await fetch("http://localhost:8000/node/");
         const data = await response.json();
         setNodes(data);
       } catch (error) {
-        console.error('Error fetching nodes:', error);
+        console.error("Error fetching nodes:", error);
       }
     };
-    
+
     fetchNodes();
-  }, [reloadNodes])
+  }, [reloadNodes]);
   if (error) {
     return <p>Error loading nodes: {error}</p>;
   }
 
   return (
     <div>
-      {nodes.map(node => (
+      {nodes.map((node) => (
         <RenderNode key={node.id} node={node} />
       ))}
     </div>
   );
-}
+};
 
 export default NodeViewer;

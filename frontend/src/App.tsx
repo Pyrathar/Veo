@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from 'react';
-import NodeCreator from './components/NodeCreator';
-import NodeViewer from './components/NodeViewer';
+import React, { useState, useCallback } from "react";
+import NodeCreator from "./components/NodeCreator";
+import NodeViewer from "./components/NodeViewer";
 
 const App: React.FC = () => {
   const [reloadNodes, setReloadNodes] = useState(false);
