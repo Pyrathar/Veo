@@ -17,6 +17,12 @@ Then Prisma:
 ```bash
 npx prisma migrate dev --name init
 ```
+
+To auto-generate types prisma normally needs this:
+```bash
+npx prisma generate
+```
+
 To Run:
 ```bash
 npm run dev
@@ -27,7 +33,7 @@ To Test:
 npm run test
 ```
 
--Backend Part:
+-Frontend Part:
 
 ```bash
 cd frontend
