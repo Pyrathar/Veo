@@ -1,13 +1,14 @@
-// tests/integration/nodeController.test.ts
-
 import { 
   createNode, 
   getNodeById, 
   getNodes, 
-  getChildrenOfNode 
+  getChildrenOfNode,
+  upsertNode
 } from "./../controllers/nodeController";
 import { clearAllData } from "../utils/cleanup";
-import { Prisma } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 describe("NodeController", () => {
   let rootNodeId: number;
@@ -15,7 +16,7 @@ describe("NodeController", () => {
   beforeAll(async () => {
     await clearAllData();
 
-    const rootNodeData: Prisma.NodeCreateInput = {
+    const rootNodeData = {
       name: "Root Node",
       height: 0,
     };
@@ -30,7 +31,7 @@ describe("NodeController", () => {
 
   describe("createNode", () => {
     it("should create a node", async () => {
-      const nodeData: Prisma.NodeCreateInput = {
+      const nodeData = {
         name: "Child Node 1",
         parent: {
           connect: { id: rootNodeId },
@@ -64,7 +65,7 @@ describe("NodeController", () => {
 
   describe("getChildrenOfNode", () => {
     it("should return child nodes of a given node", async () => {
-      const childNodeData: Prisma.NodeCreateInput = {
+      const childNodeData = {
         name: "Child Node 2",
         parent: {
           connect: { id: rootNodeId },
@@ -77,6 +78,76 @@ describe("NodeController", () => {
       const childNodes = await getChildrenOfNode(rootNodeId);
       expect(Array.isArray(childNodes)).toBeTruthy();
       expect(childNodes.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('upsertNode', () => {
+    it('should create a new node with developer and manager', async () => {
+      const nodeData = {
+        name: 'Root',
+        height: 0,
+        programmingLanguage: 'Python',
+        department: 'Engineering',
+      };
+
+      const newNode = await upsertNode(nodeData);
+
+      expect(newNode).toHaveProperty('id');
+      expect(newNode.name).toEqual(nodeData.name);
+
+      // Validate Developer Entry
+      const developer = await prisma.developer.findUnique({
+        where: { nodeId: newNode.id },
+      });
+      expect(developer).not.toBeNull();
+      expect(developer?.programmingLanguage).toEqual(nodeData.programmingLanguage);
+
+      // Validate Manager Entry
+      const manager = await prisma.manager.findUnique({
+        where: { nodeId: newNode.id },
+      });
+      expect(manager).not.toBeNull();
+      expect(manager?.department).toEqual(nodeData.department);
+    });
+
+    it('should update the node and related developer and manager', async () => {
+      const nodeData = {
+        name: 'Root',
+        height: 0,
+        programmingLanguage: 'Python',
+        department: 'Engineering',
+      };
+
+      const newNode = await upsertNode(nodeData);
+
+      const updatedData = {
+        id: newNode.id,
+        name: 'Updated Root',
+        height: 1,
+        programmingLanguage: 'JavaScript',
+        department: 'HR',
+      };
+
+      const updatedNode = await upsertNode(updatedData);
+
+      // Validate Updated Node
+      expect(updatedNode.id).toEqual(newNode.id);
+      expect(updatedNode.name).toEqual(updatedData.name);
+      expect(updatedNode.height).toEqual(updatedData.height);
+
+      // Validate Updated Developer Entry
+      const developer = await prisma.developer.findUnique({
+        where: { nodeId: updatedNode.id },
+      });
+      expect(developer).not.toBeNull();
+      expect(developer?.programmingLanguage).toEqual(updatedData.programmingLanguage);
+
+      // Validate Updated Manager Entry
+      const manager = await prisma.manager.findUnique({
+        where: { nodeId: updatedNode.id },
+      });
+      expect(manager).not.toBeNull();
+      expect(manager?.department).toEqual(updatedData.department);
     });
   });
 });
